@@ -1,0 +1,17 @@
+server:
+  port: 8081
+
+
+spring:
+  application:
+    name: "java_bit_back"
+  datasource:
+    url: jdbc:mysql://localhost:3306/test?allowPublicKeyRetrieval=true
+    username: root
+    password: qwer1234
+
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect

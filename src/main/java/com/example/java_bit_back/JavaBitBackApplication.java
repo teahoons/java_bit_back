@@ -9,5 +9,4 @@ public class JavaBitBackApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(JavaBitBackApplication.class, args);
 	}
-
 }
