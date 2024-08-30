@@ -1,15 +1,16 @@
 package com.example.java_bit_back.service;
 
-import com.example.java_bit_back.dto.CoinListResponse;
 import com.example.java_bit_back.entity.CoinList;
 import com.example.java_bit_back.repository.CoinListRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
+import java.io.IOException;
 
+@Slf4j
 @Service
 public class CoinListService {
 
@@ -19,33 +20,37 @@ public class CoinListService {
     private static final String API_URL = "https://api.bithumb.com/v1/market/all?isDetails=false";
 
     public void fetchAndSaveMarkets() {
-        RestTemplate restTemplate = new RestTemplate();
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+        Request request = new Request.Builder()
+                .get()
+                .url(API_URL)
+                .addHeader("content-type", "application/json")
+                .build();
 
         try {
-            // API 응답을 직접 문자열로 출력해 확인해보세요
-            String responseString = restTemplate.getForObject(API_URL, String.class);
-            System.out.println("API Response: " + responseString);
+            Response response = client.newCall(request).execute();
 
-            // DTO로 변환
-            CoinListResponse response = restTemplate.getForObject(API_URL, CoinListResponse.class);
+            if (response.body() != null) {
+                String responseString = response.body().string();
+//                log.info("API Response: {}", responseString);
 
-            if (response != null && response.getData() != null) {
-                for (Map.Entry<String, CoinListResponse.CoinInfo> entry : response.getData().entrySet()) {
-                    String coinlist = entry.getKey();
-                    CoinListResponse.CoinInfo marketInfo = entry.getValue();
+                // JSON 파싱을 위해 ObjectMapper 사용
+                ObjectMapper objectMapper = new ObjectMapper();
+                // JSON 응답을 배열로 변환
+                CoinList[] coinListArray = objectMapper.readValue(responseString, CoinList[].class);
 
-                    CoinList newCoinList = new CoinList();
-                    newCoinList.setMarket(coinlist);
-                    newCoinList.setKoreanName(marketInfo.getKoreanName());
-                    newCoinList.setEnglishName(marketInfo.getEnglishName());
-
-                    coinListRepository.save(newCoinList);
+                // 각 코인 정보를 DB에 저장
+                for (CoinList coinList : coinListArray) {
+                    coinListRepository.save(coinList);
                 }
             } else {
-                System.err.println("API response is null or data is empty.");
+                log.error("API 응답이 null입니다.");
             }
-        } catch (HttpClientErrorException e) {
-            System.err.println("API 호출 중 오류 발생: " + e.getMessage());
+        } catch (IOException e) {
+            log.error("API 호출 중 오류 발생: {}", e.getMessage());
+            throw new RuntimeException(e);
         }
+//        log.info("coin list service 완료");
     }
 }

@@ -1,5 +1,6 @@
 package com.example.java_bit_back.service;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class CoinInfoService {
 
@@ -42,7 +44,6 @@ public class CoinInfoService {
 
             // 데이터 확인을 위해 로그를 출력하거나 필요한 처리를 할 수 있습니다.
             System.out.println("API Response: " + resultMap);
-
             // 결과를 반환
             return resultMap;
         }
