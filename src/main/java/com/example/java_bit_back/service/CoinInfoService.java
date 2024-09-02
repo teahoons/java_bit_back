@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -23,7 +24,7 @@ public class CoinInfoService {
         this.objectMapper = new ObjectMapper();
     }
 
-    public Map<String, Object> getCoinInfo(String marketCode) throws IOException {
+    public Object getCoinInfo(String marketCode) throws IOException {
         String url = "https://api.bithumb.com/v1/ticker?markets=" + marketCode;
 
         Request request = new Request.Builder()
@@ -39,13 +40,14 @@ public class CoinInfoService {
 
             String jsonResponse = response.body().string();
 
-            // API 응답이 JSON 객체이므로, JSON 객체로 파싱
-            Map<String, Object> resultMap = objectMapper.readValue(jsonResponse, new TypeReference<Map<String, Object>>(){});
-
-            // 데이터 확인을 위해 로그를 출력하거나 필요한 처리를 할 수 있습니다.
-            System.out.println("API Response: " + resultMap);
-            // 결과를 반환
-            return resultMap;
+            // 응답이 JSON 배열인지 객체인지 확인한 후 적절하게 처리
+            if (jsonResponse.trim().startsWith("[")) {
+                // JSON 응답이 배열인 경우
+                return objectMapper.readValue(jsonResponse, new TypeReference<List<Map<String, Object>>>(){});
+            } else {
+                // JSON 응답이 객체인 경우
+                return objectMapper.readValue(jsonResponse, new TypeReference<Map<String, Object>>(){});
+            }
         }
     }
 }
