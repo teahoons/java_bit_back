@@ -1,9 +1,12 @@
 package com.example.java_bit_back.service;
 
+import com.example.java_bit_back.entity.CoinList;
+import com.example.java_bit_back.repository.CoinListRepository;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -11,10 +14,19 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class CoinInfoService {
+
+    @Autowired
+    private CoinListRepository coinListRepository;
+
+    public Optional<String> getMarketByKoreanName(String koreanName) {
+        Optional<CoinList> coin = coinListRepository.findByKoreanName(koreanName);
+        return coin.map(CoinList::getMarket);
+    }
 
     private final OkHttpClient client;
     private final ObjectMapper objectMapper;

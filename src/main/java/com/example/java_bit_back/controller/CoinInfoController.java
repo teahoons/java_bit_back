@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.Map;
 import java.util.List;
+import java.util.Optional;
 
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/api/coin")
 public class CoinInfoController {
@@ -19,8 +21,31 @@ public class CoinInfoController {
         this.coinInfoService = coinInfoService;
     }
 
-    @GetMapping("/{coinSymbol}")
-    public ResponseEntity<Object> getCoinInfo(@PathVariable String coinSymbol) {
+    @GetMapping("/market/{koreanName}")
+    public ResponseEntity<?> getCoinInfoByKoreanName(@PathVariable String koreanName) {
+        try {
+            // 한글 이름으로 market 조회
+            Optional<String> marketOpt = coinInfoService.getMarketByKoreanName(koreanName);
+
+            if (marketOpt.isPresent()) {
+                String market = marketOpt.get();
+                Object coinInfo = coinInfoService.getCoinInfo(market);
+                return ResponseEntity.ok(coinInfo);
+            } else {
+                System.out.println("No market found for Korean name: " + koreanName);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Coin not found for the given Korean name"));
+            }
+        } catch (IOException e) {
+            System.err.println("Error retrieving coin information for Korean name: " + koreanName);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to retrieve coin information"));
+        }
+    }
+
+    @GetMapping("/symbol/{coinSymbol}")
+    public ResponseEntity<Object> getCoinInfoBySymbol(@PathVariable String coinSymbol) {
         try {
             Object coinInfo = coinInfoService.getCoinInfo(coinSymbol);
 
